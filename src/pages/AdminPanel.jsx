@@ -170,7 +170,7 @@ const AdminPanel = ({ view = 'dashboard' }) => {
         try {
             await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3002'}/api/users`, newUser);
             setIsUserModalOpen(false);
-            setNewUser({ name: '', email: '', password: '', department: 'Operações', monthlyLimit: 5000, totalLimit: 50000 });
+            setNewUser({ name: '', email: '', password: '', department: 'Operações', role: 'GESTOR', monthlyLimit: 5000, totalLimit: 50000 });
             refreshData();
             alert('Gestor cadastrado com sucesso!');
         } catch (err) {
@@ -315,7 +315,7 @@ const AdminPanel = ({ view = 'dashboard' }) => {
                         <table className="history-table">
                             <thead>
                                 <tr>
-                                    <th>Nome</th>
+                                    <th>Nome / Perfil</th>
                                     <th>Setor</th>
                                     <th>Limite Disp.</th>
                                     <th>Ações de Controle</th>
@@ -324,14 +324,25 @@ const AdminPanel = ({ view = 'dashboard' }) => {
                             <tbody>
                                 {managers.map(user => (
                                     <tr key={user.id}>
-                                        <td className="font-medium text-text-main">{user.name}</td>
+                                        <td>
+                                            <div className="font-medium text-text-main">{user.name}</div>
+                                            <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[9px] font-bold ${user.role === 'FINANCEIRO' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'}`}>
+                                                {user.role === 'FINANCEIRO' ? 'ADMINISTRADOR' : 'GESTOR'}
+                                            </span>
+                                        </td>
                                         <td>
                                             <span className="px-2 py-0.5 bg-background-alt text-text-muted text-[10px] font-bold rounded uppercase">
                                                 {user.department || 'N/A'}
                                             </span>
                                         </td>
-                                        <td className={`font-bold ${user.available_limit < 1000 ? 'text-danger' : 'text-success'}`}>
-                                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(user.available_limit)}
+                                        <td>
+                                            {user.role === 'FINANCEIRO' ? (
+                                                <span className="text-[10px] font-bold text-text-muted italic">Ilimitado</span>
+                                            ) : (
+                                                <span className={`font-bold ${user.available_limit < 1000 ? 'text-danger' : 'text-success'}`}>
+                                                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(user.available_limit)}
+                                                </span>
+                                            )}
                                         </td>
                                         <td className="flex gap-2">
                                             <button 
@@ -348,13 +359,15 @@ const AdminPanel = ({ view = 'dashboard' }) => {
                                             >
                                                 <AlertCircle size={14} />
                                             </button>
-                                            <button 
-                                                title="Ajustar Limites" 
-                                                onClick={() => { setSelectedManager({...user}); setIsLimitModalOpen(true); }}
-                                                className="p-2 text-slate-500 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-200 transition-all"
-                                            >
-                                                <Settings size={14} />
-                                            </button>
+                                            {user.role !== 'FINANCEIRO' && (
+                                                <button 
+                                                    title="Ajustar Limites" 
+                                                    onClick={() => { setSelectedManager({...user}); setIsLimitModalOpen(true); }}
+                                                    className="p-2 text-slate-500 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-200 transition-all"
+                                                >
+                                                    <Settings size={14} />
+                                                </button>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}
@@ -720,6 +733,17 @@ const AdminPanel = ({ view = 'dashboard' }) => {
                                 />
                             </div>
                             <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Perfil de Acesso</label>
+                                <select
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium text-slate-700"
+                                    value={newUser.role}
+                                    onChange={(e) => setNewUser({...newUser, role: e.target.value})}
+                                >
+                                    <option value="GESTOR">Gestor de Área (Limitado)</option>
+                                    <option value="FINANCEIRO">Administrador (Acesso Total)</option>
+                                </select>
+                            </div>
+                            <div className="space-y-2">
                                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Setor</label>
                                 <select
                                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium text-slate-700"
@@ -729,16 +753,18 @@ const AdminPanel = ({ view = 'dashboard' }) => {
                                     {departments.map(d => <option key={d} value={d}>{d}</option>)}
                                 </select>
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Limite Mensal (R$)</label>
-                                <input
-                                    type="number"
-                                    required
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium text-slate-700"
-                                    value={newUser.monthlyLimit}
-                                    onChange={(e) => setNewUser({...newUser, monthlyLimit: e.target.value})}
-                                />
-                            </div>
+                            {newUser.role !== 'FINANCEIRO' && (
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Limite Mensal (R$)</label>
+                                    <input
+                                        type="number"
+                                        required
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium text-slate-700"
+                                        value={newUser.monthlyLimit}
+                                        onChange={(e) => setNewUser({...newUser, monthlyLimit: e.target.value})}
+                                    />
+                                </div>
+                            )}
                             <div className="md:col-span-2 pt-4 lg:pt-6 flex flex-col sm:flex-row gap-4">
                                 <button type="button" onClick={() => setIsUserModalOpen(false)} className="flex-1 py-4 border border-slate-200 text-slate-500 font-bold rounded-2xl hover:bg-slate-50 transition-all order-2 sm:order-1">Cancelar</button>
                                 <button type="submit" className="flex-[2] py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all order-1 sm:order-2">Salvar Gestor</button>

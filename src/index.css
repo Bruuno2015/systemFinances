@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));@theme {
+  --color-primary: #0061ff;
+  --color-primary-hover: #0052cc;
+  --color-bg-main: #f8fafc;
+  --color-text-main: #0f172a;
+  --color-text-muted: #64748b;
+  --color-border: #e2e8f0;
+  --color-accent: #3b82f6;
+  --color-danger: #ef4444;
+  --color-success: #10b981;
+}
+
+@layer base {
+  :root {
+    --primary: #0061ff;
+    --bg-main: #f8fafc;
+    --text-main: #0f172a;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl p-6 shadow-sm transition-all duration-200;
+  }
+  
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 cursor-pointer disabled:opacity-50;
+  }
+  
+  .btn-primary {
+    @apply bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow-md;
+  }
+  
+  .input-control {
+    @apply w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg outline-none transition-all duration-200 focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 dark:text-white;
+  }
+
+  .history-table {
+    @apply w-full text-left border-collapse;
+  }
+  
+  .history-table th {
+    @apply px-4 py-3 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider border-b border-slate-200 dark:border-slate-800;
+  }
+  
+  .history-table td {
+    @apply px-4 py-4 text-sm border-b border-slate-200 dark:border-slate-800 dark:text-slate-300;
+  }
+}
+
+/* Ensure links don't have default blue color if they have tailwind classes */
+a {
+  color: inherit;
+  text-decoration: none;
+}

@@ -19,10 +19,8 @@ const Sidebar = ({ isOpen, onClose }) => {
             <aside className={`fixed lg:sticky top-0 h-screen w-64 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col z-40 transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
                 <div className="p-6 lg:p-8 flex items-center justify-between">
                     <h1 className="text-xl font-bold flex items-center gap-2 text-blue-600 dark:text-blue-500 tracking-tight">
-                        <div className="p-1.5 bg-blue-600 dark:bg-blue-500 rounded-lg text-white">
-                            <PieChart size={20} />
-                        </div>
-                        FinControl
+                        <img src="/logo.png" alt="VexFinance" className="w-8 h-8 object-contain" />
+                        VexFinance
                     </h1>
                     <button onClick={onClose} className="lg:hidden p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
                         <X size={20} />

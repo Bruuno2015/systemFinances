@@ -1,0 +1,28 @@
+# Arquivos de código JavaScript / TypeScript
+*.js text eol=lf
+*.ts text eol=lf
+*.jsx text eol=lf
+*.tsx text eol=lf
+
+# JSON
+*.json text eol=lf
+
+# Markdown / documentação
+*.md text eol=lf
+*.txt text eol=lf
+
+# Configurações
+*.env text eol=lf
+
+# Imagens e binários não converter
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+
+# Pastas geradas pelo Node.js / Next.js
+node_modules/* -text
+.next/* -text
+out/* -text

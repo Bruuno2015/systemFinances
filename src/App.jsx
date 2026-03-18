@@ -13,6 +13,7 @@ import Cards from './pages/Cards';
 import AuditTrail from './pages/AuditTrail';
 import ExpenseList from './pages/ExpenseList';
 import TransactionDetailModal from './components/TransactionDetailModal';
+import { Toaster } from 'react-hot-toast';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
@@ -406,6 +407,7 @@ const RoleBasedDashboard = () => {
 const App = () => {
     return (
         <AuthProvider>
+            <Toaster position="top-right" />
             <Router>
                 <Routes>
                     <Route path="/login" element={<Login />} />

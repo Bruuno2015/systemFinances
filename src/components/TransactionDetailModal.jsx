@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { X, Shield, FileText, Eye, AlertTriangle, UploadCloud, Trash2, Unlock, Clock } from 'lucide-react';
+import { X, Shield, FileText, Eye, AlertTriangle, UploadCloud, Trash2, Unlock, Clock, Sparkles, CheckCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 import axios from 'axios';
 
 const TransactionDetailModal = ({ isOpen, expense, onClose, isSystemMonthClosed }) => {
@@ -36,10 +37,11 @@ const TransactionDetailModal = ({ isOpen, expense, onClose, isSystemMonthClosed 
             await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3002'}/api/expenses/${expense.id}/attach-nf`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
+            toast.success('Arquivo anexado com sucesso!');
             window.location.reload();
         } catch (error) {
             console.error(error);
-            alert('Erro ao anexar arquivo.');
+            toast.error('Erro ao anexar arquivo.');
         } finally {
             setIsProcessing(false);
         }
@@ -50,10 +52,11 @@ const TransactionDetailModal = ({ isOpen, expense, onClose, isSystemMonthClosed 
         setIsProcessing(true);
         try {
             await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:3002'}/api/expenses/${expense.id}`);
+            toast.success('Lançamento excluído!');
             window.location.reload();
         } catch (error) {
             console.error(error);
-            alert(error.response?.data?.error || 'Erro ao deletar lançamento.');
+            toast.error(error.response?.data?.error || 'Erro ao deletar lançamento.');
         } finally {
             setIsProcessing(false);
         }
@@ -63,11 +66,11 @@ const TransactionDetailModal = ({ isOpen, expense, onClose, isSystemMonthClosed 
         setIsProcessing(true);
         try {
             await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3002'}/api/expenses/${expense.id}/unlock-request`);
-            alert('Solicitação de edição enviada ao Administrador.');
+            toast.success('Solicitação de edição enviada ao Administrador.');
             window.location.reload();
         } catch (error) {
             console.error(error);
-            alert('Erro ao solicitar liberação.');
+            toast.error('Erro ao solicitar liberação.');
         } finally {
             setIsProcessing(false);
         }
@@ -132,6 +135,28 @@ const TransactionDetailModal = ({ isOpen, expense, onClose, isSystemMonthClosed 
                                     <span className="text-sm font-medium text-slate-500">Centro de Custo</span>
                                     <span className="text-sm font-bold text-slate-700">{expense.cost_center || '-'}</span>
                                 </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm font-medium text-slate-500">Auditoria IA</span>
+                                    {expense.ai_score !== null && expense.ai_score !== undefined ? (
+                                        <span title={expense.ai_analysis} className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase flex items-center gap-1 cursor-help border ${expense.ai_score >= 95 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : expense.ai_score >= 50 ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
+                                            <Sparkles size={12} /> {expense.ai_score}% CONFIANÇA
+                                        </span>
+                                    ) : (
+                                        <span className="text-sm font-bold text-slate-400">Pendente</span>
+                                    )}
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm font-medium text-slate-500">Auditoria Conciliação</span>
+                                    {expense.bank_reconciled ? (
+                                        <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold rounded uppercase flex items-center gap-1">
+                                            <CheckCircle size={12} /> BANCÁRIO OK
+                                        </span>
+                                    ) : (
+                                        <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded uppercase flex items-center gap-1">
+                                            <Clock size={12} /> AGUARDANDO BANCO
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -192,11 +217,35 @@ const TransactionDetailModal = ({ isOpen, expense, onClose, isSystemMonthClosed 
 
                         {/* Actions Matrix */}
                         <div className="pt-4 border-t border-slate-100 space-y-3">
+                            {/* REJECT Button for Admin override (Special Request) */}
+                            {expense.status !== 'Rejected' && (
+                                <button 
+                                    onClick={async () => {
+                                        if (!window.confirm('Deseja REJEITAR este lançamento e estornar o processo?')) return;
+                                        setIsProcessing(true);
+                                        try {
+                                            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3002'}/api/expenses/bulk-status`, { 
+                                                ids: [expense.id], 
+                                                status: 'Rejected' 
+                                            });
+                                            toast.success('Lançamento Rejeitado.');
+                                            window.location.reload();
+                                        } catch (e) {
+                                            toast.error('Erro ao rejeitar.');
+                                        } finally { setIsProcessing(false); }
+                                    }}
+                                    disabled={isProcessing}
+                                    className="w-full py-3 bg-rose-50 text-rose-600 font-bold text-sm rounded-xl flex items-center justify-center gap-2 hover:bg-rose-100 transition border border-rose-200"
+                                >
+                                    <AlertTriangle size={16} /> Rejeitar (Estorno/Erro)
+                                </button>
+                            )}
+
                             {canEdit ? (
                                 <button 
                                     onClick={handleDelete}
                                     disabled={isProcessing}
-                                    className="w-full py-3 bg-red-50 text-red-600 font-bold text-sm rounded-xl flex items-center justify-center gap-2 hover:bg-red-100 transition border border-red-100"
+                                    className="w-full py-3 bg-red-600 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 hover:bg-red-700 transition shadow-lg shadow-red-200"
                                 >
                                     <Trash2 size={16} /> Excluir Lançamento
                                 </button>

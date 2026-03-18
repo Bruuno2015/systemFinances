@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Search, Filter, Download, FileText, CheckCircle, Clock, AlertCircle, X } from 'lucide-react';
+import { Search, Filter, Download, FileText, CheckCircle, Clock, AlertCircle, X, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import TransactionDetailModal from '../components/TransactionDetailModal';
 import * as XLSX from 'xlsx';
@@ -58,7 +58,11 @@ const ExpenseList = () => {
         if (searchTerm) {
             const lowerSearch = searchTerm.toLowerCase();
             result = result.filter(e => {
-                const statusStr = e.status === 'Open' ? 'pendente' : (e.status === 'Approved' ? 'aprovado' : 'rejeitado');
+                const statusStr = e.status === 'Open' ? 'pendente' : 
+                                  e.status === 'Paid' ? 'pendente nf' :
+                                  e.status === 'PendingAudit' ? 'auditoria ia' :
+                                  e.status === 'PendingReconciliation' ? 'conciliação' : 
+                                  (e.status === 'Approved' || e.status === 'Closed' ? 'conciliado' : 'rejeitado');
                 const searchString = `${e.establishment || ''} ${e.cost_center || ''} ${e.managerName || ''} ${statusStr}`.toLowerCase();
                 return searchString.includes(lowerSearch);
             });
@@ -85,7 +89,11 @@ const ExpenseList = () => {
             'Centro de Custo': e.cost_center || '-',
             'Gestor Responsável': e.managerName || e.user_id,
             'Comprador': e.purchaser_name || '-',
-            'Status': e.status === 'Open' ? 'Pendente' : (e.status === 'Approved' ? 'Aprovado' : 'Rejeitado'),
+            'Status': e.status === 'Open' ? 'Pendente' : 
+                      e.status === 'Paid' ? 'Pendente de NF' : 
+                      e.status === 'PendingAudit' ? 'Pendente de Auditoria - IA' :
+                      e.status === 'PendingReconciliation' ? 'Pendente de Conciliação' : 
+                      (e.status === 'Approved' || e.status === 'Closed' ? 'Conciliado' : 'Rejeitado'),
             'Valor (R$)': e.value
         }));
 
@@ -110,9 +118,13 @@ const ExpenseList = () => {
 
     const getStatusBadge = (status) => {
         switch (status) {
-            case 'Approved': return <span className="flex items-center gap-1 px-2 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded uppercase"><CheckCircle size={10} /> Aprovado</span>;
+            case 'Approved': 
+            case 'Closed': return <span className="flex items-center gap-1 px-2 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded uppercase"><CheckCircle size={10} /> Conciliado</span>;
             case 'Rejected': return <span className="flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 text-[10px] font-bold rounded uppercase"><AlertCircle size={10} /> Rejeitado</span>;
-            default: return <span className="flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-700 text-[10px] font-bold rounded uppercase"><Clock size={10} /> Pendente</span>;
+            case 'PendingAudit': return <span className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold rounded uppercase"><Sparkles size={10} /> Auditoria - IA</span>;
+            case 'PendingReconciliation': return <span className="flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-700 text-[10px] font-bold rounded uppercase"><Clock size={10} /> Pend. Conciliação</span>;
+            case 'Paid': return <span className="flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 text-[10px] font-bold rounded uppercase"><Clock size={10} /> Pendente de NF</span>;
+            default: return <span className="flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-700 text-[10px] font-bold rounded uppercase"><Clock size={10} /> Pendente</span>;
         }
     };
 

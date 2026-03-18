@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { UserPlus, CreditCard, Lock, Unlock, AlertTriangle, FileText, Send, AlertCircle, PieChart, Settings, Eye, X, Shield, Layers, Trash2 } from 'lucide-react';
+import { UserPlus, CreditCard, Lock, Unlock, AlertTriangle, FileText, Send, AlertCircle, PieChart, Settings, Eye, X, Shield, Layers, Trash2, Sparkles, CheckCircle } from 'lucide-react';
 import AnalyticalCharts from '../components/AnalyticalCharts';
 import TransactionDetailModal from '../components/TransactionDetailModal';
 import ReconciliationModal from '../components/ReconciliationModal';
+import NfReconciliationModal from '../components/NfReconciliationModal';
+import toast from 'react-hot-toast';
 
 const AdminPanel = ({ view = 'dashboard' }) => {
     const [stats, setStats] = useState({ totalSpent: 0, pendingNFs: 0, activeManagers: 0 });
@@ -30,6 +32,7 @@ const AdminPanel = ({ view = 'dashboard' }) => {
     const [isInvoicesModalOpen, setIsInvoicesModalOpen] = useState(false);
     const [selectedInvoiceCard, setSelectedInvoiceCard] = useState(null);
     const [isReconciliationModalOpen, setIsReconciliationModalOpen] = useState(false);
+    const [isNfReconciliationModalOpen, setIsNfReconciliationModalOpen] = useState(false);
 
     const departments = ['Produção', 'TI', 'Financeiro', 'RH', 'Comercial', 'Logística', 'Operações'];
 
@@ -69,9 +72,9 @@ const AdminPanel = ({ view = 'dashboard' }) => {
         
         try {
             await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3002'}/api/notifications/${endpoint}`, { userId, message });
-            alert('Alerta enviado com sucesso!');
+            toast.success('Alerta enviado com sucesso!');
         } catch (err) {
-            alert('Erro ao enviar alerta');
+            toast.error('Erro ao enviar alerta');
         }
     };
 
@@ -103,7 +106,7 @@ const AdminPanel = ({ view = 'dashboard' }) => {
             setSelectedExpenses([]);
             refreshData();
         } catch (err) {
-            alert('Erro ao atualizar status em lote.');
+            toast.error('Erro ao atualizar status em lote.');
         } finally {
             setBulkLoading(false);
         }
@@ -121,10 +124,10 @@ const AdminPanel = ({ view = 'dashboard' }) => {
         try {
             await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3002'}/api/system/close-month`, { close: nextState, password });
             setIsMonthClosed(nextState);
-            alert(`Mês ${nextState ? 'fechado' : 'reaberto'}!`);
+            toast.success(`Mês ${nextState ? 'fechado' : 'reaberto'}!`);
             refreshData();
         } catch (err) {
-            alert(err.response?.data?.error || 'Erro ao alterar status do mês');
+            toast.error(err.response?.data?.error || 'Erro ao alterar status do mês');
         }
     };
 
@@ -134,7 +137,7 @@ const AdminPanel = ({ view = 'dashboard' }) => {
             await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3002'}/api/cards/${card.id}/toggle-status`);
             refreshData();
         } catch (err) {
-            alert('Erro ao alterar status do cartão');
+            toast.error('Erro ao alterar status do cartão');
         }
     };
 
@@ -143,9 +146,9 @@ const AdminPanel = ({ view = 'dashboard' }) => {
         try {
             await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3002'}/api/expenses/${expense.id}/unlock-approve`);
             refreshData();
-            alert('Liberação concedida com sucesso.');
+            toast.success('Liberação concedida com sucesso.');
         } catch (err) {
-            alert('Erro ao aprovar liberação.');
+            toast.error('Erro ao aprovar liberação.');
         }
     };
 
@@ -334,58 +337,61 @@ const AdminPanel = ({ view = 'dashboard' }) => {
                             </thead>
                             <tbody>
                                 {managers.map(user => (
-                                    <tr key={user.id}>
-                                        <td>
-                                            <div className="font-medium text-text-main">{user.name}</div>
-                                            <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[9px] font-bold ${user.role === 'FINANCEIRO' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'}`}>
+                                    <tr key={user.id} className="hover:bg-slate-50 transition-colors">
+                                        <td className="py-5">
+                                            <div className="font-bold text-slate-800 text-sm">{user.name}</div>
+                                            <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase ${user.role === 'FINANCEIRO' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
                                                 {user.role === 'FINANCEIRO' ? 'ADMINISTRADOR' : 'GESTOR'}
                                             </span>
                                         </td>
-                                        <td>
-                                            <span className="px-2 py-0.5 bg-background-alt text-text-muted text-[10px] font-bold rounded uppercase">
+                                        <td className="py-5">
+                                            <span className="px-2 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold rounded uppercase tracking-tight">
                                                 {user.department || 'N/A'}
                                             </span>
                                         </td>
-                                        <td>
+                                        <td className="py-5">
                                             {user.role === 'FINANCEIRO' ? (
-                                                <span className="text-[10px] font-bold text-text-muted italic">Ilimitado</span>
+                                                <span className="text-[10px] font-bold text-slate-400 italic">Ilimitado</span>
                                             ) : (
-                                                <span className={`font-bold ${user.available_limit < 1000 ? 'text-danger' : 'text-success'}`}>
-                                                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(user.available_limit)}
+                                                <span className={`font-black text-base ${user.available_limit < 1000 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                                                    <small className="text-[10px] mr-0.5">R$</small>
+                                                    {new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2 }).format(user.available_limit)}
                                                 </span>
                                             )}
                                         </td>
-                                        <td className="flex gap-2">
-                                            <button 
-                                                title="Alerta de Limite" 
-                                                onClick={() => handleSendAlert(user.id, 'limit')}
-                                                className="p-2 text-primary hover:bg-primary/5 rounded-lg border border-transparent hover:border-primary/20 transition-all"
-                                            >
-                                                <Send size={14} />
-                                            </button>
-                                            <button 
-                                                title="Alerta de Não Lançado" 
-                                                onClick={() => handleSendAlert(user.id, 'unrecorded')}
-                                                className="p-2 text-danger hover:bg-danger/5 rounded-lg border border-transparent hover:border-danger/20 transition-all"
-                                            >
-                                                <AlertCircle size={14} />
-                                            </button>
-                                            {user.role !== 'FINANCEIRO' && (
+                                        <td className="py-5">
+                                            <div className="flex items-center gap-1">
                                                 <button 
-                                                    title="Ajustar Limites" 
-                                                    onClick={() => { setSelectedManager({...user}); setIsLimitModalOpen(true); }}
-                                                    className="p-2 text-slate-500 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-200 transition-all"
+                                                    title="Alerta de Limite" 
+                                                    onClick={() => handleSendAlert(user.id, 'limit')}
+                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
                                                 >
-                                                    <Settings size={14} />
+                                                    <Send size={16} />
                                                 </button>
-                                            )}
-                                            <button 
-                                                title="Remover Gestor" 
-                                                onClick={() => handleDeleteManager(user.id)}
-                                                className="p-2 text-red-500 hover:bg-red-50 rounded-lg border border-transparent hover:border-red-200 transition-all"
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
+                                                <button 
+                                                    title="Alerta de Não Lançado" 
+                                                    onClick={() => handleSendAlert(user.id, 'unrecorded')}
+                                                    className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                                                >
+                                                    <AlertCircle size={16} />
+                                                </button>
+                                                {user.role !== 'FINANCEIRO' && (
+                                                    <button 
+                                                        title="Ajustar Limites" 
+                                                        onClick={() => { setSelectedManager({...user}); setIsLimitModalOpen(true); }}
+                                                        className="p-2 text-slate-400 hover:bg-slate-100 rounded-xl transition-all"
+                                                    >
+                                                        <Settings size={16} />
+                                                    </button>
+                                                )}
+                                                <button 
+                                                    title="Remover Gestor" 
+                                                    onClick={() => handleDeleteManager(user.id)}
+                                                    className="p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600 rounded-xl transition-all"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -562,6 +568,14 @@ const AdminPanel = ({ view = 'dashboard' }) => {
                     <h3 className="text-lg font-bold flex items-center gap-2">
                         <FileText size={20} className="text-primary" /> Transações Recentes
                     </h3>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setIsNfReconciliationModalOpen(true)}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-xl text-xs flex items-center gap-2 transition-all shadow-md shadow-indigo-200"
+                        >
+                            <Sparkles size={14} /> Auditar Notas (IA)
+                        </button>
+                    </div>
                 </div>
                 <div className="overflow-x-auto w-full">
                     <table className="history-table shadow-sm rounded-lg overflow-hidden">
@@ -633,12 +647,54 @@ const AdminPanel = ({ view = 'dashboard' }) => {
                                             >
                                                 <Eye size={10} /> DETALHES
                                             </button>
+                                            
+                                            {item.status === 'PendingAudit' && (
+                                                <button 
+                                                    onClick={async () => {
+                                                        try {
+                                                            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3002'}/api/expenses/bulk-status`, {
+                                                                ids: [item.id],
+                                                                status: 'PendingReconciliation'
+                                                            });
+                                                            toast.success('Auditoria aprovada!');
+                                                            fetchData();
+                                                        } catch (e) {
+                                                            toast.error('Erro ao aprovar auditoria.');
+                                                        }
+                                                    }}
+                                                    className="px-2 py-1 bg-emerald-50 text-emerald-600 rounded text-[10px] font-bold border border-emerald-100 hover:bg-emerald-100 transition-all flex items-center gap-1 self-start mt-1"
+                                                >
+                                                    <CheckCircle size={10} /> APROVAR AUDITORIA
+                                                </button>
+                                            )}
                                         </div>
                                     </td>
                                     <td>
-                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.status === 'Open' ? 'bg-primary/10 text-primary' : 'bg-success/10 text-success'}`}>
-                                            {item.status === 'Open' ? 'PENDENTE' : 'CONCILIADO'}
-                                        </span>
+                                        <div className="flex flex-col gap-1 items-start">
+                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                                item.status === 'Open' ? 'bg-amber-100 text-amber-700' : 
+                                                item.status === 'PendingAudit' ? 'bg-blue-100 text-blue-700' :
+                                                item.status === 'PendingReconciliation' ? 'bg-amber-500/10 text-amber-600' :
+                                                item.status === 'Paid' ? 'bg-purple-100 text-purple-700' : 
+                                                item.status === 'Rejected' ? 'bg-red-100 text-red-700' :
+                                                'bg-emerald-100 text-emerald-700'
+                                            }`}>
+                                                {item.status === 'Open' ? 'PENDENTE' : 
+                                                 item.status === 'PendingAudit' ? 'AUDITORIA - IA' :
+                                                 item.status === 'PendingReconciliation' ? 'PEND. CONCILIAÇÃO' :
+                                                 item.status === 'Paid' ? 'PENDENTE DE NF' : 
+                                                 item.status === 'Rejected' ? 'REJEITADO' : 'CONCILIADO'}
+                                            </span>
+                                            {item.ai_score !== null && item.ai_score !== undefined && (
+                                                <span 
+                                                    title={item.ai_analysis} 
+                                                    className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase cursor-help flex items-center gap-1 border ${item.ai_score >= 95 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : item.ai_score >= 50 ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}
+                                                >
+                                                    <Sparkles size={10} /> 
+                                                    {item.ai_score >= 95 ? 'IA Aprovado' : item.ai_score >= 50 ? 'IA Revisar' : 'IA Alerta'}
+                                                </span>
+                                            )}
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
@@ -875,8 +931,19 @@ const AdminPanel = ({ view = 'dashboard' }) => {
                                                 <td className="font-bold text-slate-700">{item.establishment}</td>
                                                 <td className="text-blue-600 font-bold">R$ {item.value?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                                                 <td>
-                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${item.status === 'Open' ? 'bg-primary/10 text-primary' : 'bg-success/10 text-success'}`}>
-                                                        {item.status === 'Open' ? 'PENDENTE' : 'CONCILIADO'}
+                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                                        item.status === 'Open' ? 'bg-amber-100 text-amber-700' : 
+                                                        item.status === 'PendingAudit' ? 'bg-blue-100 text-blue-700' :
+                                                        item.status === 'PendingReconciliation' ? 'bg-amber-500/10 text-amber-600' :
+                                                        item.status === 'Paid' ? 'bg-purple-100 text-purple-700' : 
+                                                        item.status === 'Rejected' ? 'bg-red-100 text-red-700' :
+                                                        'bg-emerald-100 text-emerald-700'
+                                                    }`}>
+                                                        {item.status === 'Open' ? 'PENDENTE' : 
+                                                         item.status === 'PendingAudit' ? 'AUDITORIA - IA' :
+                                                         item.status === 'PendingReconciliation' ? 'PEND. CONCILIAÇÃO' :
+                                                         item.status === 'Paid' ? 'PENDENTE DE NF' : 
+                                                         item.status === 'Rejected' ? 'REJEITADO' : 'CONCILIADO'}
                                                     </span>
                                                 </td>
                                             </tr>
@@ -912,6 +979,12 @@ const AdminPanel = ({ view = 'dashboard' }) => {
                 isOpen={isReconciliationModalOpen}
                 onClose={() => setIsReconciliationModalOpen(false)}
                 onReconciled={refreshData}
+            />
+            {/* Modal de Auditoria Física de NFs (IA) */}
+            <NfReconciliationModal 
+                isOpen={isNfReconciliationModalOpen}
+                onClose={() => setIsNfReconciliationModalOpen(false)}
+                onRefreshData={refreshData}
             />
         </div>
     );

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { X, CheckCircle, AlertTriangle, Ghost, FileCheck, Layers, CreditCard, ChevronRight, UploadCloud, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const ReconciliationModal = ({ isOpen, onClose, onReconciled }) => {
     const [file, setFile] = useState(null);
@@ -31,7 +32,7 @@ const ReconciliationModal = ({ isOpen, onClose, onReconciled }) => {
             setReport(response.data);
         } catch (error) {
             console.error(error);
-            alert(error.response?.data?.error || 'Erro ao processar fatura via IA.');
+            toast.error(error.response?.data?.error || 'Erro ao processar fatura via IA.');
         } finally {
             setLoading(false);
         }
@@ -41,18 +42,20 @@ const ReconciliationModal = ({ isOpen, onClose, onReconciled }) => {
         if (!report || !report.reconciled.length) return;
         setBulkLoading(true);
         
-        const matchedIds = report.reconciled.map(tx => tx.systemId);
+        const updates = report.reconciled.map(tx => ({
+            id: tx.systemId,
+            status: tx.suggestedStatus || 'Paid'
+        }));
 
         try {
-            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3002'}/api/expenses/bulk-status`, {
-                ids: matchedIds,
-                status: 'Closed' // Considerado Conciliado/Auditado
+            await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3002'}/api/expenses/bulk-dynamic-status`, {
+                updates
             });
-            alert(`${matchedIds.length} despesas foram conciliadas com sucesso!`);
+            toast.success(`${updates.length} despesas foram conciliadas com sucesso!`);
             onReconciled(); // Refresh parent data
             onClose();
         } catch (error) {
-            alert('Falha ao confirmar conciliação no lote.');
+            toast.error('Falha ao confirmar conciliação no lote.');
         } finally {
             setBulkLoading(false);
         }
@@ -70,7 +73,7 @@ const ReconciliationModal = ({ isOpen, onClose, onReconciled }) => {
                         </div>
                         <div>
                             <h2 className="text-2xl font-black text-slate-800 tracking-tight">Motor de Conciliação Autônoma (IA)</h2>
-                            <p className="text-sm font-medium text-slate-500 mt-0.5">Cruzamento inteligente de faturas bancárias via Google Gemini.</p>
+                            <p className="text-sm font-medium text-slate-500 mt-0.5">Cruzamento inteligente de faturas bancárias.</p>
                         </div>
                     </div>
                     <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors">

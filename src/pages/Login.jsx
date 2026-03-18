@@ -40,7 +40,7 @@ const Login = () => {
                         className="w-16 h-16 object-contain drop-shadow-md"
                     />
                 </div>
-                <h1 className="text-4xl font-black text-slate-900 tracking-tight mt-1">VexFinance</h1>
+                <h1 className="text-4xl font-black text-[#A78020] dark:text-[#E5B82E] tracking-tight mt-1">VexFinance</h1>
                 <p className="text-slate-500 mt-2 font-medium">Gestão Financeira Enterprise</p>
                 <div className="inline-block mt-3 px-3 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-full tracking-widest border border-slate-200 uppercase">
                     Versão 1.2.0

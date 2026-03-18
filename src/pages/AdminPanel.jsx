@@ -80,7 +80,7 @@ const AdminPanel = ({ view = 'dashboard' }) => {
 
     const handleToggleSelectAll = (e) => {
         if (e.target.checked) {
-            const pendingIds = globalHistory.filter(h => h.status === 'Open').map(h => h.id);
+            const pendingIds = globalHistory.filter(h => ['Open', 'Paid'].includes(h.status)).map(h => h.id);
             setSelectedExpenses(pendingIds);
         } else {
             setSelectedExpenses([]);
@@ -585,9 +585,9 @@ const AdminPanel = ({ view = 'dashboard' }) => {
                                     <input 
                                         type="checkbox" 
                                         className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer"
-                                        checked={selectedExpenses.length > 0 && selectedExpenses.length === globalHistory.filter(h => h.status === 'Open').length}
+                                        checked={selectedExpenses.length > 0 && selectedExpenses.length === globalHistory.filter(h => ['Open', 'Paid'].includes(h.status)).length}
                                         onChange={handleToggleSelectAll}
-                                        disabled={globalHistory.filter(h => h.status === 'Open').length === 0}
+                                        disabled={globalHistory.filter(h => ['Open', 'Paid'].includes(h.status)).length === 0}
                                     />
                                 </th>
                                 <th>Emissão</th>
@@ -603,7 +603,7 @@ const AdminPanel = ({ view = 'dashboard' }) => {
                             {globalHistory.map(item => (
                                 <tr key={item.id} className={selectedExpenses.includes(item.id) ? 'bg-blue-50/50' : ''}>
                                     <td>
-                                        {item.status === 'Open' && (
+                                        {['Open', 'Paid'].includes(item.status) && (
                                             <input 
                                                 type="checkbox" 
                                                 className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer"

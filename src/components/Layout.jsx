@@ -18,7 +18,7 @@ const Sidebar = ({ isOpen, onClose }) => {
             
             <aside className={`fixed lg:sticky top-0 h-screen w-64 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col z-40 transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
                 <div className="p-6 lg:p-8 flex items-center justify-between">
-                    <h1 className="text-xl font-bold flex items-center gap-2 text-blue-600 dark:text-blue-500 tracking-tight">
+                    <h1 className="text-2xl font-bold flex items-center gap-2 text-[#A78020] dark:text-[#E5B82E] tracking-tight">
                         <img src="/logo.png" alt="VexFinance" className="w-8 h-8 object-contain" />
                         VexFinance
                     </h1>

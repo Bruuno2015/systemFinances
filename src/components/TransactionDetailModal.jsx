@@ -2,8 +2,10 @@ import React, { useRef, useState } from 'react';
 import { X, Shield, FileText, Eye, AlertTriangle, UploadCloud, Trash2, Unlock, Clock, Sparkles, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 const TransactionDetailModal = ({ isOpen, expense, onClose, isSystemMonthClosed }) => {
+    const { user } = useAuth();
     const fileInputRef = useRef(null);
     const [isProcessing, setIsProcessing] = useState(false);
 
@@ -21,9 +23,10 @@ const TransactionDetailModal = ({ isOpen, expense, onClose, isSystemMonthClosed 
         installmentText = `${totalInstallments}x de R$ ${expense.value?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
     }
 
-    const isLocked = isSystemMonthClosed && !expense.admin_unlocked && expense.status === 'Open';
-    // Se o status for Approved ou Rejected, também consideramos "locked" por padrão, mas a regra principal incide sobre o mês.
-    const canEdit = !isLocked && (expense.status === 'Open' || expense.admin_unlocked);
+    const isLockedByMonth = isSystemMonthClosed && !expense.admin_unlocked;
+    const isStatusEditable = ['Open', 'Paid'].includes(expense.status);
+    const canEdit = expense.admin_unlocked || (!isLockedByMonth && isStatusEditable);
+    const isAdmin = user?.role?.toUpperCase() === 'FINANCEIRO' || user?.role?.toUpperCase() === 'ADMIN';
 
     const handleUpload = async (e) => {
         const file = e.target.files[0];
@@ -218,7 +221,7 @@ const TransactionDetailModal = ({ isOpen, expense, onClose, isSystemMonthClosed 
                         {/* Actions Matrix */}
                         <div className="pt-4 border-t border-slate-100 space-y-3">
                             {/* REJECT Button for Admin override (Special Request) */}
-                            {expense.status !== 'Rejected' && (
+                            {isAdmin && expense.status !== 'Rejected' && (
                                 <button 
                                     onClick={async () => {
                                         if (!window.confirm('Deseja REJEITAR este lançamento e estornar o processo?')) return;

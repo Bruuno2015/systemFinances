@@ -5,12 +5,13 @@ import { History, Search, Shield, Info, User, Terminal, Globe, Filter, ChevronDo
 const AuditTrail = () => {
     const [logs, setLogs] = useState([]);
     const [filteredLogs, setFilteredLogs] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [expandedLog, setExpandedLog] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [auditPassword, setAuditPassword] = useState('');
     const [authError, setAuthError] = useState('');
+    const [fetchError, setFetchError] = useState('');
 
     useEffect(() => {
         const fetchLogs = async () => {
@@ -22,6 +23,7 @@ const AuditTrail = () => {
                 setLoading(false);
             } catch (err) {
                 console.error('Error fetching logs:', err);
+                setFetchError(err.response?.data?.details || err.message || 'Erro ao carregar logs.');
                 setLoading(false);
             }
         };
@@ -31,10 +33,10 @@ const AuditTrail = () => {
     useEffect(() => {
         const lowerTerm = searchTerm.toLowerCase();
         const filtered = logs.filter(log => 
-            log.action_type?.toLowerCase().includes(lowerTerm) ||
-            log.entity_type?.toLowerCase().includes(lowerTerm) ||
-            log.user_name?.toLowerCase().includes(lowerTerm) ||
-            log.ip_address?.includes(searchTerm)
+            (log.action_type || '').toLowerCase().includes(lowerTerm) ||
+            (log.entity_type || '').toLowerCase().includes(lowerTerm) ||
+            (log.user_name || '').toLowerCase().includes(lowerTerm) ||
+            (log.ip_address || '').includes(searchTerm)
         );
         setFilteredLogs(filtered);
     }, [searchTerm, logs]);
@@ -54,6 +56,7 @@ const AuditTrail = () => {
         e.preventDefault();
         setLoading(true);
         setAuthError('');
+        setFetchError('');
         try {
             await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3002'}/api/system/verify-audit`, { password: auditPassword });
             setIsAuthenticated(true);
@@ -186,6 +189,18 @@ const AuditTrail = () => {
                                     )}
                                 </React.Fragment>
                             ))}
+                            {filteredLogs.length === 0 && !loading && (
+                                <tr>
+                                    <td colSpan="5" className="px-6 py-12 text-center text-slate-400 italic">
+                                        {fetchError ? (
+                                            <div className="text-red-500 font-bold bg-red-50 p-4 rounded-2xl border border-red-100 max-w-md mx-auto">
+                                                <p>Erro na Conexão:</p>
+                                                <p className="text-[10px] mt-1 font-mono uppercase tracking-tighter opacity-70">{fetchError}</p>
+                                            </div>
+                                        ) : 'Nenhum registro de auditoria encontrado.'}
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>

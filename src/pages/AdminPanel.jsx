@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { UserPlus, CreditCard, Lock, Unlock, AlertTriangle, FileText, Send, AlertCircle, PieChart, Settings, Eye, X, Shield, Layers } from 'lucide-react';
+import { UserPlus, CreditCard, Lock, Unlock, AlertTriangle, FileText, Send, AlertCircle, PieChart, Settings, Eye, X, Shield, Layers, Trash2 } from 'lucide-react';
 import AnalyticalCharts from '../components/AnalyticalCharts';
 import TransactionDetailModal from '../components/TransactionDetailModal';
 import ReconciliationModal from '../components/ReconciliationModal';
@@ -203,6 +203,17 @@ const AdminPanel = ({ view = 'dashboard' }) => {
         }
     };
 
+    const handleDeleteManager = async (managerId) => {
+        if (!window.confirm('Tem certeza que deseja remover este gestor? Se o gestor possuir lançamentos vinculados, a exclusão será bloqueada pelo sistema. Esta ação não pode ser desfeita.')) return;
+        try {
+            await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:3002'}/api/users/${managerId}`);
+            alert('Gestor removido com sucesso!');
+            refreshData();
+        } catch (err) {
+            alert(err.response?.data?.error || 'Erro ao remover gestor');
+        }
+    };
+
     const renderAmountColumn = (item) => {
         const installmentMatch = item.establishment?.match(/\((\d+)\/(\d+)\)$/);
         if (installmentMatch) {
@@ -368,6 +379,13 @@ const AdminPanel = ({ view = 'dashboard' }) => {
                                                     <Settings size={14} />
                                                 </button>
                                             )}
+                                            <button 
+                                                title="Remover Gestor" 
+                                                onClick={() => handleDeleteManager(user.id)}
+                                                className="p-2 text-red-500 hover:bg-red-50 rounded-lg border border-transparent hover:border-red-200 transition-all"
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}
